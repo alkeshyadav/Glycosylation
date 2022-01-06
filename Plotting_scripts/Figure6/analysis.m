@@ -1,0 +1,268 @@
+clc
+clear
+%%
+load('../../Data/Hessian/Hessian_tcells_g20.mat')
+
+addpath('../cbrewer') 
+cmap_patch = cbrewer('seq','RdPu',100);
+
+col = cbrewer('qual','Set1',8);
+alpha = 0.5*ones(8,1);
+col = [col,alpha];
+mu_color = col(1,:);
+R_color = col(2,:);
+l_color = col(3,:);
+sigma_color = col(4,:);
+
+mu_range = 1;
+R_range = 20;
+L_range = 180;
+sigma_range = 10;
+ 
+nE = 4;
+nC = 4;
+d = nC + 2*nE*nC +1;
+M = H{nE,nC};
+
+%% Eigenvalue-eigenvector of the Normalized Hessian 
+
+%Range of the optimization variable
+N = zeros(d,1);
+N(1:nC) = mu_range;
+N(nC+1:nC+nC*nE) = R_range;
+N(nC+nC*nE+1:end-1) = L_range;
+N(end) = sigma_range;
+
+%Normalization by range of the optimization variables 
+for i=1:d
+    for j =1:d
+        M(i,j) = N(i)*N(j)*M(i,j);
+    end
+end
+
+% Eigenvalue Eigenvector Calculation
+[V,D] = eig(M);
+Eig = abs(diag(D));
+V = abs(V);
+
+%% Eigenvalue Plot
+
+% Dividing the eigenvectors in groups 
+mu_group = false(d,1);
+R_group = false(d,1);
+L_group = false(d,1);
+sigma_group = false(d,1);
+for i =1:d
+    [~,k] = max(V(:,i));
+    if k <= nC
+        mu_group(i) = true;
+        
+    elseif k > nC && k <= nC+nC*nE
+        R_group(i) = true;
+    elseif k > nC+nC*nE && k<= nC+ 2*nC*nE
+        L_group(i) = true;
+    else 
+        sigma_group(i) = true;
+    end
+end
+
+% Sort the eigenvetors from mu dominated to sigma dominated 
+V_mu = V(:,mu_group);
+V_R = V(:,R_group);
+V_L = V(:,L_group);
+V_sigma = V(:,sigma_group);
+
+V_sorted = [V_mu,V_R,V_L,V_sigma];
+Eig_sorted = [Eig(mu_group);Eig(R_group);Eig(L_group);Eig(sigma_group)];
+Eig_sorted(Eig_sorted<=1e-10) = 1e-10;
+
+n_mu = sum(mu_group);
+n_R = sum(R_group);
+n_L = sum(L_group);
+n_sigma = sum(sigma_group);
+
+% Eigenvalue Patch x,y positions
+x = zeros(4,d);
+y = zeros(4,d);
+for i = 1:n_mu
+    y(:,i) = [log10(Eig_sorted(i));log10(Eig_sorted(i)); ...
+                log10(Eig_sorted(i))+0.2;log10(Eig_sorted(i))+0.2];
+    x(:,i) = [1;1+0.8;1+0.8;1];
+end
+
+for i = n_mu+1:n_mu+n_R
+    y(:,i) = [log10(Eig_sorted(i));log10(Eig_sorted(i)); ...
+                log10(Eig_sorted(i))+0.2;log10(Eig_sorted(i))+0.2];
+    x(:,i) = [2;2+0.8;2+0.8;2];
+end
+
+for i = n_mu+n_R+1:n_mu+n_R+n_L
+    y(:,i) = [log10(Eig_sorted(i));log10(Eig_sorted(i)); ...
+                log10(Eig_sorted(i))+0.2;log10(Eig_sorted(i))+0.2];
+    x(:,i) = [3;3+0.8;3+0.8;3];
+end
+
+for i = n_mu+n_R+n_L+1:n_mu+n_R+n_L+n_sigma
+    y(:,i) = [log10(Eig_sorted(i));log10(Eig_sorted(i)); ...
+                log10(Eig_sorted(i))+0.2;log10(Eig_sorted(i))+0.2];
+    x(:,i) = [4;4+0.8;4+0.8;4];
+end
+
+
+% Plotting the patch with rectangles 
+figure()
+p = patch(x,y,'k');
+
+min_y = -10;
+max_y = 11;
+
+mu_pos = [1,min_y,.8,max_y - min_y];
+R_pos = [2,min_y,0.8,max_y - min_y];
+l_pos = [3,min_y,0.8,max_y - min_y];
+sigma_pos = [4,min_y,0.8,max_y - min_y];
+
+rectangle('position',mu_pos,'FaceColor',mu_color,'LineWidth',0.1,'EdgeColor','w');
+rectangle('position',R_pos,'FaceColor',R_color,'LineWidth',0.1,'EdgeColor','w');
+rectangle('position',l_pos,'FaceColor',l_color,'LineWidth',0.1,'EdgeColor','w');
+rectangle('position',sigma_pos,'FaceColor',sigma_color,'LineWidth',0.1,'EdgeColor','w');
+
+
+xlabel('Eigenvectors','Fontsize',25)
+ylabel('Log(Eigenvalue)','Fontsize',25)
+
+ylim([-10.3,12])
+xlim([0.8,5])
+ax = gca;
+ax.Box = 'off';
+ax.FontSize = 15;
+ax.LineWidth = 2;
+
+names = {'{\mu}'; '{R}'; '{l}'; '{\sigma}'};
+set(gca,'xtick',[1.4,2.4,3.4,4.4],'xticklabel',names,'fontsize',25)
+
+print('Fig6b','-dpng','-r300')
+
+%% Eigenvector Plot 
+
+% x-y for the patch plot
+x1 = [0.5;1.5;1.5;0.5];
+x = zeros(4,d,d);
+for j=1:d
+    xj = x1 + j-1;
+    for i = 1:d
+        x(:,i,j) = xj;
+    end
+end
+x = reshape(x,[4,d^2]);
+
+y1 = [0.5;0.5;1.5;1.5];
+y = zeros(4,d,d);
+for j =  1:d
+    for k = 1:d
+        yk = y1 + k-1;
+        y(:,k,j) = yk;
+    end
+end
+y = reshape(y,[4,d^2]);
+
+% Patch plot 
+figure()
+patch(x,y,V_sorted(:),'EdgeColor','none')
+ax = gca;
+ax.Box = 'off';
+ax.FontSize = 15;
+ax.LineWidth = 2;
+ax.XTick = [1:4:d];
+xlim([0,d+1])
+ylim([0,d+1])
+
+xlabel('Eigenvectors','Fontsize',25)
+temp = gray(10);
+cmap = temp(end:-1:1,:);
+colormap(cmap)
+colorbar
+
+% Group color rectangles  
+mu_pos = [0.5,0.5,n_mu,d];
+R_pos = [n_mu+0.5,0.5,n_R,d];
+l_pos = [n_mu+n_R+0.5,0.5,n_L,d];
+sigma_pos = [n_mu+n_R+n_L+0.5,0.5,n_sigma,d];
+
+rectangle('position',mu_pos,'FaceColor',mu_color);
+rectangle('position',R_pos,'FaceColor',R_color);
+rectangle('position',l_pos,'FaceColor',l_color);
+rectangle('position',sigma_pos,'FaceColor',sigma_color);
+
+line(0.5+(0:d),(nC+0.5)*ones(d+1,1),'Color','k')
+line(0.5+(0:d),(nC+nE*nC+0.5)*ones(d+1,1),'Color','k')
+line(0.5+(0:d),(nC+2*nE*nC+0.5)*ones(d+1,1),'Color','k')
+
+ytickloc = [(nC+1)/2,nC+(nE*nC+1)/2,nC+nE*nC+(nE*nC+1)/2,d];
+names = {'\mu','R','L','\sigma'};
+set(gca,'ytick',ytickloc,'yticklabel',names,'fontsize',25)
+
+print('Fig6a','-dpng','-r300')
+
+%% Stiffness Plot
+
+% Calculation of stiffness  
+stiffness = zeros(10,10);
+for nE = 1:10
+    for nC = 1:10
+        d = nC+2*nE*nC+1;
+        M = H{nE,nC};
+        % normalization by range 
+        N = zeros(d,1); 
+        N(1:nC) = mu_range;
+        N(nC+1:nC+nC*nE) = R_range;
+        N(nC+nC*nE+1:end-1) = L_range;
+        N(end) = sigma_range;
+        for i=1:d
+            for j=1:d
+                 M(i,j) = N(i)*N(j)*M(i,j);
+            end
+         end
+         [~,D] = eig(M);
+         stiffness(nE,nC) = log10(sum(D(:))/d);
+    end
+end
+
+% xy for patch plot
+x1 = [0.5;1.5;1.5;0.5];
+x = zeros(4,10,10);
+for j=1:10
+    xj = x1 + j-1;
+    for i = 1:10
+        x(:,i,j) = xj;
+    end
+end
+x = reshape(x,[4,10^2]);
+
+y1 = [0.5;0.5;1.5;1.5];
+y = zeros(4,10,10);
+for j =  1:10
+    for k = 1:10
+        yk = y1 + k-1;
+        y(:,k,j) = yk;
+    end
+end
+y = reshape(y,[4,10^2]);
+
+figure()
+stiffness = stiffness'
+patch(x,y,stiffness(:),'EdgeColor','none')
+colormap(cmap_patch)
+colorbar
+xlabel('N_E','Fontsize',25)
+ylabel('N_C','Fontsize',25)
+ylim([0,11])
+xlim([0,11])
+ax = gca;
+ax.Box = 'off';
+ax.FontSize = 20;
+ax.LineWidth = 2;
+ax.XTick = [1:10];
+ax.YTick = [1:10];
+
+print('Fig6_supp','-dpng','-r300')
+

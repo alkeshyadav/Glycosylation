@@ -1,0 +1,146 @@
+clc
+clear
+%%
+load('../../Data/Hessian/Hessian_tcells_g20.mat')
+
+addpath('../cbrewer') 
+cmap_patch = cbrewer('seq','RdPu',100);
+
+mu_range = 1;
+R_range = 20;
+L_range = 180;
+sigma_range = 10;
+
+
+%% Eigenvalue-eigenvector of the Normalized Hessian 
+max_mu = zeros(10,10);
+max_R = zeros(10,10);
+max_L = zeros(10,10);
+max_sigma = zeros(10,10);
+for nE = 1:10
+    for nC =1:10
+        d = nC + 2*nE*nC +1;
+        M = H{nE,nC};
+        
+        %Range of the optimization variable
+        N = zeros(d,1);
+        N(1:nC) = mu_range;
+        N(nC+1:nC+nC*nE) = R_range;
+        N(nC+nC*nE+1:end-1) = L_range;
+        N(end) = sigma_range;
+
+        %Normalization by range of the optimization variables 
+        for i=1:d
+            for j =1:d
+                M(i,j) = N(i)*N(j)*M(i,j);
+            end
+        end
+
+        % Eigenvalue Eigenvector Calculation
+        [V,D] = eig(M);
+        Eig = abs(diag(D));
+        V = abs(V);
+%        Eig(Eig<=1e-6) = 1e-6;
+
+        % Grouping eigenvectors and eigenvalues
+        mu_group = false(d,1);
+        R_group = false(d,1);
+        L_group = false(d,1);
+        sigma_group = false(d,1);
+        for i =1:d
+            [~,k] = max(V(:,i));
+            if k <= nC
+                mu_group(i) = true;
+                
+            elseif k > nC && k <= nC+nC*nE
+                R_group(i) = true;
+            elseif k > nC+nC*nE && k<= nC+ 2*nC*nE
+                L_group(i) = true;
+            else
+                sigma_group(i) = true;
+            end
+        end
+        
+        
+        
+        if any(mu_group)
+            max_mu(nE,nC) = max(Eig(mu_group));
+        else 
+            
+            max_mu(nE,nC) = ;
+        end
+        
+        max_R(nE,nC) = max(Eig(R_group));
+        max_L(nE,nC) = max(Eig(L_group));
+        
+        if any(sigma_group)
+            max_sigma(nE,nC) = max(Eig(sigma_group));
+        else 
+            max_sigma(nE,nC) = NaN;
+        end
+    end
+end
+
+
+xv1 = [1;1.8;1.8;1];
+x = [];
+for j=1:4
+    xv = xv1 + j-1;
+    for k = 1:10
+        x = [x,xv];
+    end
+end
+
+yv1 = [0.5;0.5;1.5;1.5];
+y = [];
+for j =  1:4
+    for k = 1:10
+        yv = yv1 + k-1;
+        y = [y,yv];
+    end
+end
+figure()
+
+max_mu = max_mu(:,4);
+max_R = max_R(:,4);
+max_L = max_L(:,4);
+max_sigma = max_sigma(:,4);
+
+R = log10([max_mu;max_R;max_L;max_sigma]);
+patch(x,y,R,'EdgeColor','none')
+
+ax = gca;
+ax.Box = 'off';
+ax.FontSize = 25;
+ax.LineWidth = 2;
+
+xlabel('Eigenvector','Fontsize',25)
+ylabel('N_C','Fontsize',25)
+colormap(cmap_patch)
+colorbar
+
+
+ax.YTick = 1:2:10;
+names = {'{\mu}'; '{R}'; '{l}'; '{\sigma}'};
+set(gca,'xtick',[1.4,2.4,3.4,4.4],'xticklabel',names)
+
+xlim([0.7,5])
+ylim([0,11])
+
+print('Fig6c','-dpng','-r300')
+
+% % color rectangles  
+% min_y = 0.5;
+% max_y = 10.5;
+% 
+% mu_pos = [1,min_y,.8,max_y - min_y];
+% R_pos = [2,min_y,0.8,max_y - min_y];
+% l_pos = [3,min_y,0.8,max_y - min_y];
+% sigma_pos = [4,min_y,0.8,max_y - min_y];
+% 
+% rectangle('position',mu_pos,'FaceColor',mu_color,'LineWidth',0.1,'EdgeColor','w');
+% rectangle('position',R_pos,'FaceColor',R_color,'LineWidth',0.1,'EdgeColor','w');
+% rectangle('position',l_pos,'FaceColor',l_color,'LineWidth',0.1,'EdgeColor','w');
+% rectangle('position',sigma_pos,'FaceColor',sigma_color,'LineWidth',0.1,'EdgeColor','w');
+
+        

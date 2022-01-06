@@ -1,0 +1,119 @@
+clc
+clear
+%% Data
+   
+    
+nt{1} = '../../Data/OptimizationB/nC_tcells_g3.mat';
+nt{2} = '../../Data/OptimizationB/nE_tcells_g3.mat';
+nt{3} = '../../Data/OptimizationB/nC_tcells_g20.mat';
+nt{4} = '../../Data/OptimizationB/nE_tcells_g20.mat';
+
+color1 = [44/256,162/256,95/256];
+color2 = [136/256,86/256,167/256];
+color3 = [67/256,162/256,202/256];
+color4 = [227/256,74/256,51/256];
+
+
+
+
+%% Figure 3a: Dkl vs sigma, Nc for 3-GMM approx of T-cells                   
+
+[D1,s1,D2,s2,D3,s3,D4,s4] = data_cleaning(nt{1});
+
+figure()
+plot(s1(1:end-1),D1(1:end-1),'-o','color',color1,'LineWidth',2,'MarkerSize',10)
+hold on
+plot(s2(1:end-1),D2(1:end-1),'-o','color',color2,'LineWidth',2,'MarkerSize',10)
+plot(s3(1:end-1),D3(1:end-1),'-o','color',color3,'LineWidth',2,'MarkerSize',10)
+plot(s4(1:end-1),D4(1:end-1),'-o','color',color4,'LineWidth',2,'MarkerSize',10)
+
+ax = gca;
+ax.Box = 'off';
+ax.FontSize = 20;
+ax.LineWidth = 3;
+
+xlabel('Enzyme Specificity, \sigma','Fontsize',25)
+ylabel('KL Divergence, D/H({\bf T}^{(20)})','Fontsize',25)
+hleg1 =  legend('N_C = 1','N_C = 4','N_C = 6', 'N_C= 10');
+set(hleg1,'LineWidth',0.5,'Location','BestOutside')
+
+xlim([0,.9])
+ylim([0,.2])
+print('Fig3a','-dpng','-r300')
+
+
+%% Figure 3b: Dkl vs sigma, Nc for 20-GMM approx of T-cells                   
+
+[D1,s1,D2,s2,D3,s3,D4,s4] = data_cleaning(nt{3});
+
+figure()
+plot(s1(1:end-1),D1(1:end-1),'-o','color',color1,'LineWidth',2,'MarkerSize',10)
+hold on
+plot(s2(1:end-1),D2(1:end-1),'-o','color',color2,'LineWidth',2,'MarkerSize',10)
+plot(s3(1:end-1),D3(1:end-1),'-o','color',color3,'LineWidth',2,'MarkerSize',10)
+plot(s4(1:end-1),D4(1:end-1),'-o','color',color4,'LineWidth',2,'MarkerSize',10)
+
+ax = gca;
+ax.Box = 'off';
+ax.FontSize = 20;
+ax.LineWidth = 3;
+
+xlabel('Enzyme Specificity, \sigma','Fontsize',25)
+ylabel('KL Divergence, D/H({\bf T}^{(20)})','Fontsize',25)
+hleg1 =  legend('N_C = 1','N_C = 4','N_C = 6', 'N_C= 10')
+set(hleg1,'LineWidth',0.5,'Location','BestOutside')
+
+xlim([0,.9])
+ylim([0,.8])
+print('Fig3b','-dpng','-r300')
+
+%% Figure 3c: Dkl vs sigma, Ne for 3-GMM approx of T-cells                   
+
+[D1,s1,D2,s2,D3,s3,D4,s4] = data_cleaning(nt{2});
+
+figure()
+plot(s1(1:end-1),D1(1:end-1),'-o','color',color1,'LineWidth',2,'MarkerSize',10)
+hold on
+plot(s2(1:end-1),D2(1:end-1),'-o','color',color2,'LineWidth',2,'MarkerSize',10)
+plot(s3(1:end-1),D3(1:end-1),'-o','color',color3,'LineWidth',2,'MarkerSize',10)
+plot(s4(1:end-1),D4(1:end-1),'-o','color',color4,'LineWidth',2,'MarkerSize',10)
+
+ax = gca;
+ax.Box = 'off';
+ax.FontSize = 20;
+ax.LineWidth = 3;
+
+xlabel('Enzyme Specificity, \sigma','Fontsize',25)
+ylabel('KL Divergence, D/H({\bf T}^{(20)})','Fontsize',25)
+hleg1 =  legend('N_E = 1','N_E = 4','N_E = 6', 'N_E= 10')
+set(hleg1,'LineWidth',0.5,'Location','BestOutside')
+
+xlim([0,.9])
+ylim([0,.2])
+print('Fig3c','-dpng','-r300')
+
+
+%% Figure 3d: Dkl vs sigma, Ne for 20-GMM approx of T-cells                   
+
+[D1,s1,D2,s2,D3,s3,D4,s4] = data_cleaning(nt{4});
+
+figure()
+plot(s1(1:end-1),D1(1:end-1),'-o','color',color1,'LineWidth',2,'MarkerSize',10)
+hold on
+plot(s2(1:end-1),D2(1:end-1),'-o','color',color2,'LineWidth',2,'MarkerSize',10)
+plot(s3(1:end-1),D3(1:end-1),'-o','color',color3,'LineWidth',2,'MarkerSize',10)
+plot(s4(1:end-1),D4(1:end-1),'-o','color',color4,'LineWidth',2,'MarkerSize',10)
+
+ax = gca;
+ax.Box = 'off';
+ax.FontSize = 20;
+ax.LineWidth = 3;
+
+xlabel('Enzyme Specificity, \sigma','Fontsize',25)
+ylabel('KL Divergence, D/H({\bf T}^{(20)})','Fontsize',25)
+hleg1 =  legend('N_E = 1','N_E = 4','N_E = 6', 'N_E= 10')
+set(hleg1,'LineWidth',0.5,'Location','BestOutside')
+
+xlim([0,.9])
+ylim([0,.8])
+print('Fig3d','-dpng','-r300')
